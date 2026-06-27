@@ -19,7 +19,7 @@ Since this is built using standard vanilla web technologies (HTML, CSS, JS) with
 2. Double-click `index.html` (or drag and drop it into any browser like Chrome, Firefox, or Safari).
 3. The app will open and run completely offline!
 
-### Option 2: Simple Python Local Server (Recommended)
+### Option 2: Simple Python Local Server
 Running a local server ensures native modal dialogs, persistence features, and printing work with maximum browser security:
 1. Open a terminal and navigate to the project directory.
 2. Run the command:
