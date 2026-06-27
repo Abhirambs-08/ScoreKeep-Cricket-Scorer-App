@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cricket Scorer - Dynamic Realtime Scoring</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="app-container">
+
+    <!-- Global Header -->
+    <header class="global-header glass-panel">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 1.4rem;">🏏</span>
+        <h1 style="font-size: 1.2rem; font-weight: 800; margin: 0; color: var(--color-text-main);">ScoreKeep</h1>
+      </div>
+      <button id="theme-toggle-btn" class="theme-toggle-btn" aria-label="Toggle Theme">
+        <span class="theme-icon">☀️</span>
+      </button>
+    </header>
+
+    <!-- 1. SETUP SECTION -->
+    <main id="setup-view" class="view-section active">
+      <section class="glass-panel">
+        <h2 class="section-title">Match Configuration</h2>
+        <form id="match-setup-form" onsubmit="return false;">
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="setup-team-a">Team A (Batting first)</label>
+              <input type="text" id="setup-team-a" class="form-input" placeholder="Team A" value="Avengers XI" required>
+            </div>
+            <div class="form-group">
+              <label for="setup-team-b">Team B (Bowling first)</label>
+              <input type="text" id="setup-team-b" class="form-input" placeholder="Team B" value="Titans CC" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="setup-overs">Total Overs</label>
+            <input type="number" id="setup-overs" class="form-input" min="1" max="100" value="5" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="setup-striker">Striker Batsman</label>
+              <input type="text" id="setup-striker" class="form-input" placeholder="Batsman 1" value="Virat" required>
+            </div>
+            <div class="form-group">
+              <label for="setup-non-striker">Non-Striker</label>
+              <input type="text" id="setup-non-striker" class="form-input" placeholder="Batsman 2" value="Rohit" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="setup-bowler">Opening Bowler</label>
+            <input type="text" id="setup-bowler" class="form-input" placeholder="Bowler" value="Bumrah" required>
+          </div>
+
+          <button type="submit" id="start-match-btn" class="btn">
+            Start Cricket Match
+          </button>
+        </form>
+      </section>
+    </main>
+
+    <!-- 2. DASHBOARD SECTION (LIVE MATCH) -->
+    <main id="dashboard-view" class="view-section">
+      <header class="glass-panel">
+        <div>
+          <h1 id="live-match-teams" style="font-size: 1.2rem;">Avengers vs Titans</h1>
+          <p id="live-match-innings-title" style="font-size: 0.8rem; color: var(--color-primary); font-weight: bold; text-transform: uppercase;">1st Innings</p>
+        </div>
+        <button id="nav-setup-btn" class="btn btn-secondary" style="padding: 8px 12px; font-size: 0.85rem; width: auto; border-radius: var(--border-radius-sm);">Reset</button>
+      </header>
+
+      <!-- Primary Score Board -->
+      <section class="glass-panel score-summary-panel">
+        <div class="score-text">
+          <span id="live-score">0</span>
+          <span class="score-slash">/</span>
+          <span id="live-wickets">0</span>
+        </div>
+        <div class="score-meta">
+          Overs: <span id="live-overs" style="font-weight: 700; color: white;">0.0</span> / <span id="live-max-overs">0</span>
+          &nbsp;&bull;&nbsp;
+          CRR: <span id="live-crr" style="font-weight: 700; color: white;">0.00</span>
+        </div>
+        <div id="chase-target-container" class="chase-target" style="display: none;">
+          Target: <span id="chase-target-val">100</span> runs | Need <span id="chase-runs-needed">100</span> off <span id="chase-balls-remaining">30</span> balls (RRR: <span id="live-rrr">12.00</span>)
+        </div>
+      </section>
+
+      <!-- Batter Stats -->
+      <section class="glass-panel">
+        <h2 class="section-title">Batting</h2>
+        <div class="stats-grid" id="dashboard-batsmen-list">
+          <!-- Dynamically populated batsman records -->
+          <div class="stats-row striker" id="striker-row">
+            <div>
+              <div class="batsman-name" id="striker-name">Virat</div>
+              <div class="ball-history-dots" id="striker-dots">
+                <span class="dot-mini">4</span>
+                <span class="dot-mini">1</span>
+              </div>
+            </div>
+            <div class="stats-values">
+              <div class="stats-primary"><span id="striker-runs">5</span>*</div>
+              <div class="stats-secondary"><span id="striker-balls">2</span> balls faced</div>
+            </div>
+          </div>
+          <div class="stats-row" id="non-striker-row">
+            <div>
+              <div class="batsman-name" id="non-striker-name">Rohit</div>
+              <div class="ball-history-dots" id="non-striker-dots"></div>
+            </div>
+            <div class="stats-values">
+              <div class="stats-primary"><span id="non-striker-runs">0</span></div>
+              <div class="stats-secondary"><span id="non-striker-balls">0</span> balls faced</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Bowler Stats -->
+      <section class="glass-panel">
+        <h2 class="section-title">Bowling</h2>
+        <div class="stats-grid">
+          <div class="stats-row">
+            <div>
+              <div class="bowler-name" id="bowler-name">Bumrah</div>
+              <!-- Bowler spell list -->
+              <div class="bowler-spell-details" id="bowler-spell-details">
+                <div class="over-detail-item">
+                  <span>Over 1: [ 1, 0, 4 ]</span>
+                  <span>5 runs, 0 Wkts</span>
+                </div>
+              </div>
+            </div>
+            <div class="stats-values">
+              <div class="stats-primary"><span id="bowler-wickets">0</span> - <span id="bowler-runs">0</span></div>
+              <div class="stats-secondary">Overs: <span id="bowler-overs">0.0</span> &nbsp; Econ: <span id="bowler-econ">0.00</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Current Over Timeline -->
+      <section class="glass-panel">
+        <h2 class="section-title">Current Over</h2>
+        <div class="timeline-flex" id="current-over-timeline">
+          <div class="over-ball-circle active"></div>
+          <div class="over-ball-circle"></div>
+          <div class="over-ball-circle"></div>
+          <div class="over-ball-circle"></div>
+          <div class="over-ball-circle"></div>
+          <div class="over-ball-circle"></div>
+        </div>
+      </section>
+
+      <!-- Action Buttons Grid -->
+      <section class="glass-panel">
+        <h2 class="section-title">Scoring Panel</h2>
+        <div class="scoring-grid">
+          <button class="scoring-btn btn-run-0" data-val="0">Dot</button>
+          <button class="scoring-btn" data-val="1">1</button>
+          <button class="scoring-btn" data-val="2">2</button>
+          <button class="scoring-btn" data-val="3">3</button>
+          <button class="scoring-btn btn-run-4" data-val="4">4</button>
+          <button class="scoring-btn" data-val="5">5</button>
+          <button class="scoring-btn btn-run-6" data-val="6">6</button>
+          <button class="scoring-btn btn-extra" data-type="wide">WD</button>
+          <button class="scoring-btn btn-extra" data-type="noball">NB</button>
+          <button class="scoring-btn btn-extra" data-type="bye">BYE</button>
+          <button class="scoring-btn btn-wicket" id="wicket-btn">WICKET!</button>
+          <button class="scoring-btn btn-extra btn-lbye" data-type="legbye">L.BYE</button>
+          <button class="scoring-btn btn-undo" id="undo-btn">UNDO last ball</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- 3. MATCH SUMMARY SECTION -->
+    <main id="summary-view" class="view-section">
+      <header class="glass-panel">
+        <div>
+          <h1>Match Summary</h1>
+          <p style="font-size: 0.85rem; color: var(--color-primary); font-weight: 600;" id="summary-result-msg">Avengers XI won by 12 runs</p>
+        </div>
+      </header>
+
+      <!-- Scoreboard details per innings -->
+      <section class="glass-panel">
+        <h2 class="section-title" id="summary-innings1-title">Avengers XI Innings</h2>
+        <div class="summary-team-scorecard">
+          <div class="summary-score">
+            <span id="summary-innings1-runs">142/5</span>
+            <span style="font-size: 0.9rem; color: var(--color-text-muted); font-weight: normal;">(Overs: <span id="summary-innings1-overs">5.0</span>)</span>
+          </div>
+          
+          <h3 style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 6px; text-transform: uppercase;">Batting</h3>
+          <table class="summary-table" id="summary-innings1-batting">
+            <thead>
+              <tr>
+                <th>Batter</th>
+                <th class="num-col">R</th>
+                <th class="num-col">B</th>
+                <th class="num-col">4s</th>
+                <th class="num-col">6s</th>
+                <th class="num-col">SR</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+          
+          <h3 style="font-size: 0.85rem; color: var(--color-text-muted); margin: 12px 0 6px 0; text-transform: uppercase;">Bowling</h3>
+          <table class="summary-table" id="summary-innings1-bowling">
+            <thead>
+              <tr>
+                <th>Bowler</th>
+                <th class="num-col">O</th>
+                <th class="num-col">R</th>
+                <th class="num-col">W</th>
+                <th class="num-col">Econ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="glass-panel" id="summary-innings2-panel">
+        <h2 class="section-title" id="summary-innings2-title">Titans CC Innings</h2>
+        <div class="summary-team-scorecard">
+          <div class="summary-score">
+            <span id="summary-innings2-runs">130/7</span>
+            <span style="font-size: 0.9rem; color: var(--color-text-muted); font-weight: normal;">(Overs: <span id="summary-innings2-overs">5.0</span>)</span>
+          </div>
+          
+          <h3 style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 6px; text-transform: uppercase;">Batting</h3>
+          <table class="summary-table" id="summary-innings2-batting">
+            <thead>
+              <tr>
+                <th>Batter</th>
+                <th class="num-col">R</th>
+                <th class="num-col">B</th>
+                <th class="num-col">4s</th>
+                <th class="num-col">6s</th>
+                <th class="num-col">SR</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+          
+          <h3 style="font-size: 0.85rem; color: var(--color-text-muted); margin: 12px 0 6px 0; text-transform: uppercase;">Bowling</h3>
+          <table class="summary-table" id="summary-innings2-bowling">
+            <thead>
+              <tr>
+                <th>Bowler</th>
+                <th class="num-col">O</th>
+                <th class="num-col">R</th>
+                <th class="num-col">W</th>
+                <th class="num-col">Econ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <div class="form-row" style="margin-top: 16px;">
+        <button id="summary-print-btn" class="btn btn-secondary">Download PDF</button>
+        <button id="summary-restart-btn" class="btn">New Match</button>
+      </div>
+    </main>
+
+    <!-- ==================== MODALS / DIALOGS ==================== -->
+
+    <!-- Wicket Prompt Dialog -->
+    <dialog id="wicket-dialog" closedby="any" aria-labelledby="wicketDialogTitle">
+      <form method="dialog" id="wicket-form">
+        <div class="dialog-header" id="wicketDialogTitle">Wicket Details</div>
+        
+        <div class="dialog-body">
+          <div class="form-group">
+            <label>Who got out?</label>
+            <div class="toggle-group" id="wicket-player-toggle">
+              <button type="button" class="toggle-btn active" id="wicket-striker-btn">Striker</button>
+              <button type="button" class="toggle-btn" id="wicket-nonstriker-btn">Non-Striker</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Dismissal Type</label>
+            <div class="wicket-type-grid">
+              <label class="radio-card">
+                <input type="radio" name="wicket-type" value="Bowled" checked> Bowled
+              </label>
+              <label class="radio-card">
+                <input type="radio" name="wicket-type" value="Caught"> Caught
+              </label>
+              <label class="radio-card">
+                <input type="radio" name="wicket-type" value="LBW"> LBW
+              </label>
+              <label class="radio-card">
+                <input type="radio" name="wicket-type" value="Run Out"> Run Out
+              </label>
+              <label class="radio-card">
+                <input type="radio" name="wicket-type" value="Stumped"> Stumped
+              </label>
+              <label class="radio-card">
+                <input type="radio" name="wicket-type" value="Retired"> Retired
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group" id="runout-cross-group" style="display: none;">
+            <label>Did the batsman cross?</label>
+            <div class="toggle-group" id="runout-cross-toggle">
+              <button type="button" class="toggle-btn" id="runout-cross-no-btn">No</button>
+              <button type="button" class="toggle-btn active" id="runout-cross-yes-btn">Yes</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="new-batsman-name">New Batsman Name</label>
+            <input type="text" id="new-batsman-name" class="form-input" placeholder="e.g. Dhoni" required>
+          </div>
+        </div>
+
+        <div class="dialog-actions">
+          <button type="button" class="btn btn-secondary" id="wicket-cancel-btn">Cancel</button>
+          <button type="submit" class="btn">Submit</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- New Bowler Dialog -->
+    <dialog id="bowler-dialog" closedby="none" aria-labelledby="bowlerDialogTitle">
+      <form id="bowler-form" onsubmit="return false;">
+        <div class="dialog-header" id="bowlerDialogTitle">New Bowler</div>
+        <div class="dialog-body">
+          <div class="form-group" id="existing-bowlers-group" style="display: none;">
+            <label>Select Existing Bowler</label>
+            <div id="existing-bowlers-list" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px;">
+              <!-- Dynamic chips -->
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="new-bowler-name">Or Enter Bowler Name</label>
+            <input type="text" id="new-bowler-name" class="form-input" placeholder="e.g. Shami">
+          </div>
+        </div>
+        <div class="dialog-actions">
+          <button type="button" class="btn btn-secondary" id="bowler-undo-btn">Undo Last Ball</button>
+          <button type="submit" class="btn">Start Next Over</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- Innings Break Dialog -->
+    <dialog id="innings-dialog" closedby="none" aria-labelledby="inningsDialogTitle">
+      <form id="innings-form" onsubmit="return false;">
+        <div class="dialog-header" id="inningsDialogTitle">Innings Over!</div>
+        <div class="dialog-body">
+          <p id="innings-dialog-desc" style="font-size: 1rem; line-height: 1.6; color: var(--color-text-main);">
+            Avengers XI scored 142/5 in 5 overs.
+          </p>
+          <p id="innings-dialog-target" style="font-size: 1.1rem; font-weight: 700; color: var(--color-accent); margin-top: 8px; margin-bottom: 16px;">
+            Titans CC needs 143 runs to win.
+          </p>
+          <hr style="border: 0; border-top: 1px solid var(--color-glass-border); margin-bottom: 12px;">
+          <div class="form-group">
+            <label for="chase-striker">Striker Batsman</label>
+            <input type="text" id="chase-striker" class="form-input" placeholder="e.g. Dhoni" required>
+          </div>
+          <div class="form-group">
+            <label for="chase-non-striker">Non-Striker</label>
+            <input type="text" id="chase-non-striker" class="form-input" placeholder="e.g. Yuvi" required>
+          </div>
+          <div class="form-group">
+            <label for="chase-bowler">Opening Bowler</label>
+            <input type="text" id="chase-bowler" class="form-input" placeholder="e.g. Starc" required>
+          </div>
+        </div>
+        <div class="dialog-actions">
+          <button type="submit" id="start-chase-btn" class="btn">Start Run Chase</button>
+        </div>
+      </form>
+    </dialog>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
