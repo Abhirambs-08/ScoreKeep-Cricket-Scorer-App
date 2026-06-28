@@ -23,18 +23,50 @@
 
     <!-- 1. SETUP SECTION -->
     <main id="setup-view" class="view-section active">
+      
+      <!-- Splitter & Toss Card -->
+      <section class="glass-panel" style="margin-bottom: 4px;">
+        <details id="splitter-details">
+          <summary style="font-family: var(--font-heading); font-weight: 700; font-size: 0.95rem; color: var(--color-primary); cursor: pointer; user-select: none; outline: none;">
+            Quick Team Splitter & Toss Simulator (Optional)
+          </summary>
+          <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 12px;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label style="margin-bottom: 4px;">Player Pool Names</label>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="text" id="pool-player-input" class="form-input" style="flex: 1; font-size: 0.85rem; padding: 10px;" placeholder="Add player name...">
+                <button type="button" id="btn-add-pool-player" class="btn btn-secondary" style="padding: 10px; font-size: 0.85rem; height: auto; width: auto; font-weight: 700; flex-shrink: 0;">Add</button>
+              </div>
+              <div id="pool-added-players" style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;">
+                <!-- Dynamically added players list -->
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <button type="button" id="btn-split-players" class="btn btn-secondary" style="padding: 10px; font-size: 0.85rem; height: auto;">Split Teams</button>
+              <button type="button" id="btn-toss-coin" class="btn btn-secondary" style="padding: 10px; font-size: 0.85rem; height: auto;">Flip Coin</button>
+            </div>
+            
+            <div id="split-results" style="display: none; font-size: 0.8rem; padding: 10px; background: var(--color-primary-bg); border: 1px solid var(--color-primary); border-radius: var(--border-radius-md); line-height: 1.4;"></div>
+            <div id="toss-results" style="display: none; font-size: 0.8rem; padding: 10px; background: var(--color-accent-bg); border: 1px dashed var(--color-accent); border-radius: var(--border-radius-md); line-height: 1.4; text-align: center;"></div>
+          </div>
+        </details>
+      </section>
+
+      <!-- Main Config Form -->
       <section class="glass-panel">
         <h2 class="section-title">Match Configuration</h2>
         <form id="match-setup-form" onsubmit="return false;">
           
-          <div class="form-row">
-            <div class="form-group">
+          <div class="form-row" style="display: flex; align-items: flex-end; gap: 8px;">
+            <div class="form-group" style="flex: 1; margin-bottom: 0;">
               <label for="setup-team-a">Team A (Batting first)</label>
-              <input type="text" id="setup-team-a" class="form-input" placeholder="Team A" value="Avengers XI" required>
+              <input type="text" id="setup-team-a" class="form-input" placeholder="Team A" value="Team A" required>
             </div>
-            <div class="form-group">
+            <button type="button" id="btn-swap-setup-teams" class="btn btn-secondary" style="padding: 10px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 1.1rem; flex-shrink: 0; box-shadow: none; margin-bottom: 0;">⇄</button>
+            <div class="form-group" style="flex: 1; margin-bottom: 0;">
               <label for="setup-team-b">Team B (Bowling first)</label>
-              <input type="text" id="setup-team-b" class="form-input" placeholder="Team B" value="Titans CC" required>
+              <input type="text" id="setup-team-b" class="form-input" placeholder="Team B" value="Team B" required>
             </div>
           </div>
 
@@ -46,17 +78,20 @@
           <div class="form-row">
             <div class="form-group">
               <label for="setup-striker">Striker Batsman</label>
-              <input type="text" id="setup-striker" class="form-input" placeholder="Batsman 1" value="Virat" required>
+              <input type="text" id="setup-striker" list="squad-a-list" class="form-input" placeholder="Batsman 1" value="Virat" required>
+              <select id="setup-striker-select" class="form-input" style="display: none;"></select>
             </div>
             <div class="form-group">
               <label for="setup-non-striker">Non-Striker</label>
-              <input type="text" id="setup-non-striker" class="form-input" placeholder="Batsman 2" value="Rohit" required>
+              <input type="text" id="setup-non-striker" list="squad-a-list" class="form-input" placeholder="Batsman 2" value="Rohit" required>
+              <select id="setup-non-striker-select" class="form-input" style="display: none;"></select>
             </div>
           </div>
 
           <div class="form-group">
             <label for="setup-bowler">Opening Bowler</label>
-            <input type="text" id="setup-bowler" class="form-input" placeholder="Bowler" value="Bumrah" required>
+            <input type="text" id="setup-bowler" list="squad-b-list" class="form-input" placeholder="Bowler" value="Bumrah" required>
+            <select id="setup-bowler-select" class="form-input" style="display: none;"></select>
           </div>
 
           <button type="submit" id="start-match-btn" class="btn">
@@ -64,105 +99,61 @@
           </button>
         </form>
       </section>
+
+      <!-- Squad Datalists populated in JS -->
+      <datalist id="squad-a-list"></datalist>
+      <datalist id="squad-b-list"></datalist>
     </main>
 
     <!-- 2. DASHBOARD SECTION (LIVE MATCH) -->
     <main id="dashboard-view" class="view-section">
-      <header class="glass-panel">
-        <div>
-          <h1 id="live-match-teams" style="font-size: 1.2rem;">Avengers vs Titans</h1>
-          <p id="live-match-innings-title" style="font-size: 0.8rem; color: var(--color-primary); font-weight: bold; text-transform: uppercase;">1st Innings</p>
+      
+      <!-- Panel 1: Integrated Header & Scoreboard -->
+      <header class="glass-panel score-header-panel">
+        <div class="header-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <div>
+            <h1 id="live-match-teams" style="font-size: 1.1rem; margin: 0; font-weight: 800;">Avengers vs Titans</h1>
+            <p id="live-match-innings-title" style="font-size: 0.75rem; color: var(--color-primary); font-weight: 800; text-transform: uppercase; margin: 2px 0 0 0;">1st Innings</p>
+          </div>
+          <button id="nav-setup-btn" class="btn btn-secondary btn-reset-compact" style="padding: 6px 12px; font-size: 0.8rem; width: auto; height: auto; border-radius: var(--border-radius-sm); font-weight: 700; box-shadow: none;">Reset</button>
         </div>
-        <button id="nav-setup-btn" class="btn btn-secondary" style="padding: 8px 12px; font-size: 0.85rem; width: auto; border-radius: var(--border-radius-sm);">Reset</button>
+        
+        <div class="score-display-row" style="display: flex; justify-content: space-between; align-items: center;">
+          <div class="score-text" style="font-size: 2.8rem; margin: 0; font-weight: 900; letter-spacing: -0.03em;">
+            <span id="live-score">0</span><span class="score-slash">/</span><span id="live-wickets">0</span>
+          </div>
+          <div class="score-rates" style="text-align: right; font-size: 0.85rem; font-weight: 600; color: var(--color-text-muted); line-height: 1.4;">
+            <div>Overs: <span id="live-overs" style="font-weight: 800; color: var(--color-text-main);">0.0</span> / <span id="live-max-overs">0</span></div>
+            <div>CRR: <span id="live-crr" style="font-weight: 800; color: var(--color-text-main);">0.00</span></div>
+          </div>
+        </div>
+        
+        <div id="chase-target-container" class="chase-target-compact" style="display: none; margin-top: 8px; padding: 6px 12px; background: var(--color-accent-bg); border: 1px dashed var(--color-accent); border-radius: var(--border-radius-sm); color: var(--color-accent); font-size: 0.8rem; font-weight: 700; text-align: center;">
+          Target: <span id="chase-target-val">100</span> | Need <span id="chase-runs-needed">100</span> off <span id="chase-balls-remaining">30</span> b (RRR: <span id="live-rrr">12.00</span>)
+        </div>
       </header>
 
-      <!-- Primary Score Board -->
-      <section class="glass-panel score-summary-panel">
-        <div class="score-text">
-          <span id="live-score">0</span>
-          <span class="score-slash">/</span>
-          <span id="live-wickets">0</span>
+      <!-- Panel 2: Combined Active Player Stats -->
+      <section class="glass-panel stats-panel-compact" style="padding: 12px 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 4px;">
+          <h2 class="section-title" style="margin-bottom: 0; padding-bottom: 0; border: none; font-size: 0.75rem;">Live Stats</h2>
+          <button type="button" id="btn-swap-strike" class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.7rem; width: auto; height: auto; border-radius: var(--border-radius-sm); font-weight: 700; gap: 4px; box-shadow: none;">⇄ Swap Strike</button>
         </div>
-        <div class="score-meta">
-          Overs: <span id="live-overs" style="font-weight: 700; color: white;">0.0</span> / <span id="live-max-overs">0</span>
-          &nbsp;&bull;&nbsp;
-          CRR: <span id="live-crr" style="font-weight: 700; color: white;">0.00</span>
-        </div>
-        <div id="chase-target-container" class="chase-target" style="display: none;">
-          Target: <span id="chase-target-val">100</span> runs | Need <span id="chase-runs-needed">100</span> off <span id="chase-balls-remaining">30</span> balls (RRR: <span id="live-rrr">12.00</span>)
-        </div>
-      </section>
-
-      <!-- Batter Stats -->
-      <section class="glass-panel">
-        <h2 class="section-title">Batting</h2>
         <div class="stats-grid" id="dashboard-batsmen-list">
-          <!-- Dynamically populated batsman records -->
-          <div class="stats-row striker" id="striker-row">
-            <div>
-              <div class="batsman-name" id="striker-name">Virat</div>
-              <div class="ball-history-dots" id="striker-dots">
-                <span class="dot-mini">4</span>
-                <span class="dot-mini">1</span>
-              </div>
-            </div>
-            <div class="stats-values">
-              <div class="stats-primary"><span id="striker-runs">5</span>*</div>
-              <div class="stats-secondary"><span id="striker-balls">2</span> balls faced</div>
-            </div>
-          </div>
-          <div class="stats-row" id="non-striker-row">
-            <div>
-              <div class="batsman-name" id="non-striker-name">Rohit</div>
-              <div class="ball-history-dots" id="non-striker-dots"></div>
-            </div>
-            <div class="stats-values">
-              <div class="stats-primary"><span id="non-striker-runs">0</span></div>
-              <div class="stats-secondary"><span id="non-striker-balls">0</span> balls faced</div>
-            </div>
-          </div>
+          <!-- Dynamically populated batsman & bowler records -->
         </div>
       </section>
 
-      <!-- Bowler Stats -->
-      <section class="glass-panel">
-        <h2 class="section-title">Bowling</h2>
-        <div class="stats-grid">
-          <div class="stats-row">
-            <div>
-              <div class="bowler-name" id="bowler-name">Bumrah</div>
-              <!-- Bowler spell list -->
-              <div class="bowler-spell-details" id="bowler-spell-details">
-                <div class="over-detail-item">
-                  <span>Over 1: [ 1, 0, 4 ]</span>
-                  <span>5 runs, 0 Wkts</span>
-                </div>
-              </div>
-            </div>
-            <div class="stats-values">
-              <div class="stats-primary"><span id="bowler-wickets">0</span> - <span id="bowler-runs">0</span></div>
-              <div class="stats-secondary">Overs: <span id="bowler-overs">0.0</span> &nbsp; Econ: <span id="bowler-econ">0.00</span></div>
-            </div>
+      <!-- Panel 3: Timeline & Scoring Actions -->
+      <section class="glass-panel scoring-panel-compact" style="padding: 12px 16px; display: flex; flex-direction: column; gap: 8px;">
+        <!-- Over Timeline -->
+        <div class="timeline-row">
+          <div class="timeline-flex" id="current-over-timeline" style="margin-bottom: 2px;">
+            <!-- timeline circles -->
           </div>
         </div>
-      </section>
-
-      <!-- Current Over Timeline -->
-      <section class="glass-panel">
-        <h2 class="section-title">Current Over</h2>
-        <div class="timeline-flex" id="current-over-timeline">
-          <div class="over-ball-circle active"></div>
-          <div class="over-ball-circle"></div>
-          <div class="over-ball-circle"></div>
-          <div class="over-ball-circle"></div>
-          <div class="over-ball-circle"></div>
-          <div class="over-ball-circle"></div>
-        </div>
-      </section>
-
-      <!-- Action Buttons Grid -->
-      <section class="glass-panel">
-        <h2 class="section-title">Scoring Panel</h2>
+        
+        <!-- Scoring Keys Grid -->
         <div class="scoring-grid">
           <button class="scoring-btn btn-run-0" data-val="0">Dot</button>
           <button class="scoring-btn" data-val="1">1</button>
@@ -331,9 +322,16 @@
             </div>
           </div>
 
-          <div class="form-group">
+          <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-top: 8px; margin-bottom: 12px;">
+            <input type="checkbox" id="wicket-last-man" style="width: 18px; height: 18px; cursor: pointer;">
+            <label for="wicket-last-man" style="margin-bottom: 0; cursor: pointer; text-transform: none; font-size: 0.85rem; font-weight: 600;">Last Man Standing (No partner, bat alone)</label>
+          </div>
+
+          <div class="form-group" id="new-batsman-group">
             <label for="new-batsman-name">New Batsman Name</label>
-            <input type="text" id="new-batsman-name" class="form-input" placeholder="e.g. Dhoni" required>
+            <input type="text" id="new-batsman-name" list="squad-batters-list" class="form-input" placeholder="e.g. Dhoni" required>
+            <select id="new-batsman-select" class="form-input" style="display: none;"></select>
+            <datalist id="squad-batters-list"></datalist>
           </div>
         </div>
 
@@ -352,6 +350,12 @@
           <div class="form-group" id="existing-bowlers-group" style="display: none;">
             <label>Select Existing Bowler</label>
             <div id="existing-bowlers-list" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px;">
+              <!-- Dynamic chips -->
+            </div>
+          </div>
+          <div class="form-group" id="squad-bowlers-group" style="display: none;">
+            <label>Select Bowler from Squad</label>
+            <div id="squad-bowlers-list" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px;">
               <!-- Dynamic chips -->
             </div>
           </div>
@@ -382,18 +386,39 @@
           <div class="form-group">
             <label for="chase-striker">Striker Batsman</label>
             <input type="text" id="chase-striker" class="form-input" placeholder="e.g. Dhoni" required>
+            <select id="chase-striker-select" class="form-input" style="display: none;"></select>
           </div>
           <div class="form-group">
             <label for="chase-non-striker">Non-Striker</label>
             <input type="text" id="chase-non-striker" class="form-input" placeholder="e.g. Yuvi" required>
+            <select id="chase-non-striker-select" class="form-input" style="display: none;"></select>
           </div>
           <div class="form-group">
             <label for="chase-bowler">Opening Bowler</label>
             <input type="text" id="chase-bowler" class="form-input" placeholder="e.g. Starc" required>
+            <select id="chase-bowler-select" class="form-input" style="display: none;"></select>
           </div>
         </div>
         <div class="dialog-actions">
           <button type="submit" id="start-chase-btn" class="btn">Start Run Chase</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- Substitute Batsman Dialog -->
+    <dialog id="substitute-dialog" closedby="any" aria-labelledby="subTitle">
+      <form id="substitute-form" onsubmit="return false;">
+        <div class="dialog-header" id="subTitle">Substitute Batsman</div>
+        <div class="dialog-body">
+          <div class="form-group" id="substitute-group">
+            <label for="substitute-select">Select New Batsman</label>
+            <select id="substitute-select" class="form-input"></select>
+            <input type="text" id="substitute-input" class="form-input" placeholder="Batsman name" style="display: none;">
+          </div>
+        </div>
+        <div class="dialog-actions">
+          <button type="button" class="btn btn-secondary" id="substitute-cancel-btn">Cancel</button>
+          <button type="submit" class="btn">Substitute</button>
         </div>
       </form>
     </dialog>
