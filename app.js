@@ -85,6 +85,8 @@ function clearState() {
   const poolAdded = document.getElementById('pool-added-players');
   if (poolAdded) poolAdded.innerHTML = '';
   
+  renderSavedPlayerSuggestions();
+  
   const splitResults = document.getElementById('split-results');
   if (splitResults) {
     splitResults.style.display = 'none';
@@ -169,10 +171,96 @@ let poolJoker = null;
 let tossWinner = null;
 let tossLoser = null;
 
+// --- Saved Players Cache (so you don't have to retype names every match) ---
+const SAVED_PLAYERS_KEY = 'cricket_scorer_saved_players';
+
+function loadSavedPlayerNames() {
+  try {
+    const data = localStorage.getItem(SAVED_PLAYERS_KEY);
+    const parsed = data ? JSON.parse(data) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    console.error("Failed to load saved players:", e);
+    return [];
+  }
+}
+
+function saveSavedPlayerNames(names) {
+  try {
+    localStorage.setItem(SAVED_PLAYERS_KEY, JSON.stringify(names));
+  } catch (e) {
+    console.error("Failed to save players:", e);
+  }
+}
+
+// Add a name to the saved cache (deduped, case-insensitive)
+function cachePlayerName(name) {
+  const saved = loadSavedPlayerNames();
+  if (!saved.some(n => n.toLowerCase() === name.toLowerCase())) {
+    saved.push(name);
+    saveSavedPlayerNames(saved);
+  }
+}
+
+// Permanently remove a name from the saved cache (does not touch the active pool)
+function removeSavedPlayerName(name) {
+  const saved = loadSavedPlayerNames().filter(n => n.toLowerCase() !== name.toLowerCase());
+  saveSavedPlayerNames(saved);
+  renderSavedPlayerSuggestions();
+}
+
+// Render "tap to add" chips for previously-used players not already in the pool
+function renderSavedPlayerSuggestions() {
+  const container = document.getElementById('saved-players-suggestions');
+  if (!container) return;
+
+  const saved = loadSavedPlayerNames();
+  const poolLower = playerPool.map(n => n.toLowerCase());
+  const suggestions = saved.filter(n => !poolLower.includes(n.toLowerCase()));
+
+  if (suggestions.length === 0) {
+    container.innerHTML = '';
+    container.style.display = 'none';
+    return;
+  }
+
+  container.style.display = 'flex';
+  container.innerHTML = `<div style="width:100%; font-size:0.7rem; color:var(--color-text-muted); margin-bottom:2px;">Saved players (tap to add):</div>`;
+
+  suggestions.forEach(name => {
+    const chip = document.createElement('span');
+    chip.className = 'bowler-select-chip';
+    chip.style.padding = '6px 10px';
+    chip.style.fontSize = '0.75rem';
+    chip.style.display = 'inline-flex';
+    chip.style.alignItems = 'center';
+    chip.style.gap = '6px';
+
+    chip.innerHTML = `
+      <span class="saved-player-add">${name}</span>
+      <span style="font-weight:bold; color:var(--color-danger); cursor:pointer; font-size:0.85rem;" title="Remove from saved list">&times;</span>
+    `;
+
+    chip.querySelector('.saved-player-add').addEventListener('click', () => {
+      addPlayerToPool(name);
+    });
+    chip.querySelector('span[title]').addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (confirm(`Remove "${name}" from your saved players list?`)) {
+        removeSavedPlayerName(name);
+      }
+    });
+
+    container.appendChild(chip);
+  });
+}
+
 // Add player to pool list
-function addPlayerToPool() {
+// Accepts an optional `presetName` (used by saved-player chips); otherwise reads the input field.
+function addPlayerToPool(presetName) {
   const inputEl = document.getElementById('pool-player-input');
-  const name = inputEl.value.trim();
+  const safePreset = (typeof presetName === 'string') ? presetName : '';
+  const name = (safePreset || inputEl.value).trim();
   if (!name) return;
   
   if (playerPool.some(n => n.toLowerCase() === name.toLowerCase())) {
@@ -181,14 +269,17 @@ function addPlayerToPool() {
   }
   
   playerPool.push(name);
+  cachePlayerName(name); // remember this name for next time
   inputEl.value = '';
   renderPlayerPoolChips();
+  renderSavedPlayerSuggestions();
   inputEl.focus();
 }
 
 function removePlayerFromPool(idx) {
   playerPool.splice(idx, 1);
   renderPlayerPoolChips();
+  renderSavedPlayerSuggestions();
 }
 
 function renderPlayerPoolChips() {
@@ -224,10 +315,13 @@ document.getElementById('pool-player-input').addEventListener('keydown', (e) => 
 });
 
 // Bind Add button
-document.getElementById('btn-add-pool-player').addEventListener('click', addPlayerToPool);
+document.getElementById('btn-add-pool-player').addEventListener('click', () => addPlayerToPool());
 
 // Expose remove handler globally
 window.removePlayerFromPool = removePlayerFromPool;
+
+// Show any previously-saved player names as quick-add suggestions on load
+renderSavedPlayerSuggestions();
 
 // Split players function
 function splitPlayersPool() {
@@ -1100,7 +1194,7 @@ function executeAddExtra(type) {
       wicket: null
     });
 
-    postBallCheck();
+    postBallCheck(false);
   }
   else if (type === 'noball') {
     // Prompt for run scored off the bat on No Ball
@@ -1137,7 +1231,7 @@ function executeAddExtra(type) {
       swapStriker(inn);
     }
     
-    postBallCheck();
+    postBallCheck(false);
   }
   else if (type === 'bye' || type === 'legbye') {
     const extraRunsStr = prompt(`Enter number of ${type}s run:\n(1, 2, 3, 4)`, "1");
@@ -1316,7 +1410,12 @@ function executeStartSecondInnings(setup) {
 }
 
 // --- POST BALL CHECK HANDLER ---
-function postBallCheck() {
+// isLegalDelivery: false for wide/no-ball, since they do NOT advance inn.balls
+// and therefore can never complete an over on their own. Without this flag,
+// the over-completion check below (inn.balls % 6 === 0) stays "true" for every
+// wide/no-ball bowled immediately after an over has just ended (because balls
+// hasn't moved yet), incorrectly re-opening the new-bowler prompt.
+function postBallCheck(isLegalDelivery = true) {
   const inn = state.innings[state.currentInningsIndex];
   
   // Check Innings End
@@ -1415,7 +1514,7 @@ function postBallCheck() {
   }
 
   // Handle standard over completion transitions (when NOT finished)
-  if (!isFinished && inn.balls % 6 === 0 && inn.balls > 0) {
+  if (!isFinished && isLegalDelivery && inn.balls % 6 === 0 && inn.balls > 0) {
     // Swap strikers at end of over
     swapStriker(inn);
     

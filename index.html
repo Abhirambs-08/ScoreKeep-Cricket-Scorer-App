@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cricket Scorer - Dynamic Realtime Scoring</title>
+  <title>MCA Cricket Scorer -Just Martin Things 💪</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -40,6 +40,9 @@
               <div id="pool-added-players" style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;">
                 <!-- Dynamically added players list -->
               </div>
+              <div id="saved-players-suggestions" style="display: none; gap: 6px; flex-wrap: wrap; margin-top: 10px; align-items: center;">
+                <!-- Dynamically populated saved/recent player suggestions -->
+              </div>
             </div>
             
             <div class="form-row">
@@ -60,12 +63,12 @@
           
           <div class="form-row" style="display: flex; align-items: flex-end; gap: 8px;">
             <div class="form-group" style="flex: 1; margin-bottom: 0;">
-              <label for="setup-team-a">Team A (Batting first)</label>
+              <label for="setup-team-a">Team Martin</label>
               <input type="text" id="setup-team-a" class="form-input" placeholder="Team A" value="Team A" required>
             </div>
             <button type="button" id="btn-swap-setup-teams" class="btn btn-secondary" style="padding: 10px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 1.1rem; flex-shrink: 0; box-shadow: none; margin-bottom: 0;">⇄</button>
             <div class="form-group" style="flex: 1; margin-bottom: 0;">
-              <label for="setup-team-b">Team B (Bowling first)</label>
+              <label for="setup-team-b">Team Rhino</label>
               <input type="text" id="setup-team-b" class="form-input" placeholder="Team B" value="Team B" required>
             </div>
           </div>
