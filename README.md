@@ -37,6 +37,27 @@ Open the local address displayed in the terminal output.
 
 ---
 
+## 💥 Gully Cricket Features
+
+To make scoring extremely flexible for casual and local matches, ScoreKeep includes specialized rules:
+
+1. **Automatic Team Splitting & Coin Toss:**
+   - Enter individual player names to build a pool.
+   - The app automatically splits them into **Team A** and **Team B** evenly.
+   - **Joker Player:** If there is an odd number of players, one player is designated as the **Joker** who bats and bowls for both teams!
+   - Simulated coin flip elects to bat or bowl first. A manual swap button (`⇄`) allows swapping roles easily.
+2. **Dynamic Squad Dropdowns:**
+   - Instead of typing names repeatedly, the app displays convenient dropdown selects populated with your squad names.
+   - Prevents selecting duplicate players or entering active batsmen as the bowler.
+3. **Last Man Standing Rule:**
+   - In casual cricket, if all batsmen are out except one, that last player is allowed to continue batting alone.
+   - The app supports this automatically by providing a checkbox to play as a single batsman.
+4. **Mid-Match Player Changes:**
+   - Click the **Change** button next to any active batsman or bowler on the dashboard to replace them or fix a name typo instantly mid-game.
+   - Active bowler swap automatically transfers mid-over balls and conceded runs to the new bowler.
+
+---
+
 ## 🏏 How to Score a Match
 
 1. **Setup:** Enter team names, match overs, active batsmen, and the opening bowler. Tap **Start Cricket Match**.
