@@ -363,9 +363,9 @@ function splitPlayersPool() {
   const resultsDiv = document.getElementById('split-results');
   resultsDiv.style.display = 'block';
   resultsDiv.innerHTML = `
-    <strong>Team A Squad (${poolSquadA.length - (poolJoker ? 1 : 0)} players):</strong><br>
+    <strong>Team Martin Squad (${poolSquadA.length - (poolJoker ? 1 : 0)} players):</strong><br>
     ${poolSquadA.filter(n => n !== poolJoker).join(', ') || 'None'}<br><br>
-    <strong>Team B Squad (${poolSquadB.length - (poolJoker ? 1 : 0)} players):</strong><br>
+    <strong>Team Rhino Squad (${poolSquadB.length - (poolJoker ? 1 : 0)} players):</strong><br>
     ${poolSquadB.filter(n => n !== poolJoker).join(', ') || 'None'}<br>
     ${poolJoker ? `<br><strong>🃏 Joker Player:</strong> <span style="color:var(--color-accent); font-weight:800;">${poolJoker}</span> (plays for both teams!)` : ''}
   `;
@@ -446,8 +446,8 @@ function updateSetupDatalists() {
 
 // Toss Coin function
 function tossCoin() {
-  const nameA = "Team A";
-  const nameB = "Team B";
+  const nameA = "Team Martin";
+  const nameB = "Team Rhino";
   
   const isTeamAWinner = Math.random() < 0.5;
   tossWinner = isTeamAWinner ? nameA : nameB;
@@ -472,12 +472,12 @@ window.selectTossChoice = function(choice) {
   const teamAVal = isWinnerBatting ? tossWinner : tossLoser;
   const teamBVal = isWinnerBatting ? tossLoser : tossWinner;
   
-  document.getElementById('setup-team-a').value = teamAVal;
-  document.getElementById('setup-team-b').value = teamBVal;
+  document.getElementById('setup-team-martin').value = teamAVal;
+  document.getElementById('setup-team-rhino').value = teamBVal;
   
   // Link original squads based on who is batting first
   if (originalSquadA.length > 0) {
-    if (teamAVal === "Team A") {
+    if (teamAVal === "Team Martin") {
       poolSquadA = [...originalSquadA];
       poolSquadB = [...originalSquadB];
     } else {
@@ -497,8 +497,8 @@ window.selectTossChoice = function(choice) {
 document.getElementById('btn-split-players').addEventListener('click', splitPlayersPool);
 document.getElementById('btn-toss-coin').addEventListener('click', tossCoin);
 document.getElementById('btn-swap-setup-teams').addEventListener('click', () => {
-  const teamAInput = document.getElementById('setup-team-a');
-  const teamBInput = document.getElementById('setup-team-b');
+  const teamAInput = document.getElementById('setup-team-martin');
+  const teamBInput = document.getElementById('setup-team-rhino');
   
   const tempName = teamAInput.value;
   teamAInput.value = teamBInput.value;
@@ -516,8 +516,8 @@ document.getElementById('btn-swap-setup-teams').addEventListener('click', () => 
 document.getElementById('match-setup-form').addEventListener('submit', (e) => {
   e.preventDefault();
   
-  const teamA = document.getElementById('setup-team-a').value.trim();
-  const teamB = document.getElementById('setup-team-b').value.trim();
+  const teamA = document.getElementById('setup-team-martin').value.trim();
+  const teamB = document.getElementById('setup-team-rhino').value.trim();
   const overs = parseInt(document.getElementById('setup-overs').value);
 
   const isDropdownActive = (poolSquadA.length > 0 && poolSquadB.length > 0);
